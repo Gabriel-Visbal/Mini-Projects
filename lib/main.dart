@@ -1,6 +1,7 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum LearningPace{ casual, standard, intensive }
 
@@ -31,9 +32,31 @@ class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
   LearningPace? selectedPace;
 
-  void setPace(LearningPace pace) {
+  MyAppState() {
+    _loadPace();
+  }
+  void setPace(LearningPace pace) async {
     selectedPace = pace;
     notifyListeners();
+    _savePace(pace);
+  }
+
+  Future<void> _savePace(LearningPace pace) async{
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString("selectedPace", pace.toString());
+  }
+
+  Future<void> _loadPace() async{
+    final prefs = await SharedPreferences.getInstance();
+    final paceString = prefs.getString("selectedPace");
+
+    if(paceString != null){
+      selectedPace = LearningPace.values.firstWhere(
+        (e) => e.toString() == paceString,
+        orElse: () => LearningPace.casual,
+      );
+      notifyListeners();
+    }
   }
 }
 
